@@ -1,5 +1,11 @@
 /*
 kairyou, 2013-01-08
+
+size选项: contain: 等比缩放并拉伸, 图片全部显示; cover: 等比缩放并拉伸, 图片完全覆盖容器; auto 图片不拉伸, 居中显示
+fill: 图片小于缩略图尺寸时, 是否填充(false: 缩略图宽高自动缩放到适应图片, true: 缩略图尺寸不变)
+stretch: 小图是否强制拉伸以适应缩略图的尺寸(size = auto/contain时)
+
+注意: 添加图片水印不能使用跨域的图片
 最好在 http开头的地址 下测试
 */
 
@@ -8,35 +14,35 @@ kairyou, 2013-01-08
     // caches
     $.support.filereader = !!(window.File && window.FileReader && window.FileList && window.Blob);
     var setting = {
-        width: 0, // 固定缩略图宽
-        height: 0, // 固定缩略图高
-        fill: false, // 是否填充留白 (false: 宽高不限制死, 缩图不会有留白) // size:cover 无留白
-        background: '#fff', // 生成图片填充背景
-        type: 'image/jpeg', // 生成图片类型. 'image/png'(png+background:null: 生成透明png)
-        size: 'contain', // contain: 等比缩放并拉伸(stretch:true), 图片全部显示; cover: 等比缩放并拉伸, 图片完全覆盖容器; auto 图片不拉伸, 居中显示
-        mark: {}, // 添加水印
-        // 文字水印, 文字背景: bgColor: '#ccc', bgPadding: 5, // font: normal, bold, italic
-        // mark = {padding: 5, height: 18, text: 'test', color: '#000', font: '400 18px Arial'}
-        // 图片水印, 注意跨域
+        width: 0, // thumbnail width
+        height: 0, //thumbnail height
+        fill: false, // fill color when the image is smaller than thumbnails size.
+        background: '#fff', // fill color‎
+        type: 'image/jpeg', // mime-type for thumbnail ('image/jpeg' | 'image/png')
+        size: 'contain', // CSS3 background-size: contain | cover | auto
+        mark: {}, // watermark
+        // text watermark.
+        // mark = {padding: 5, height: 18, text: 'test', color: '#000', font: '400 18px Arial'} // font: normal, bold, italic
+            // bgColor: '#ccc' (background color); bgPadding: 5 (padding)
+        // image watermark. (Note: cross-domain is not allowed)
         // mark = {padding: 5, src: 'mark.png', width: 34, height: 45};
-        stretch: false, // 小图是否拉伸, 照顾(size: auto/contain 时)的特殊需求
-        success: null, // 生成缩略图后 callback
-        error: null // 出错callback
+        stretch: false, // stretch image(small versions) to fill thumbnail (size = auto | contain)
+        success: null, // call function after thumbnail has been created.
+        error: null // error callback
     };
     var $body = $('body');
-    var IMG_FILE = /image.*/;
-    // var TEXT_FILE = /text.*/;
+    var IMG_FILE = /image.*/; // var TEXT_FILE = /text.*/;
     // 缩放比
     var getRatio = function(src, traget, size) {
         var ret;
         var ratioS = src.width / src.height,
             ratioT = traget.width / traget.height;
         // console.log('原图宽高比 vs 目标宽高比:', ratioS > ratioT ? '宽度变化大' : '高度变化大');
-        if(size === 'cover'){ //background-size: cover; (等比缩放, 图片完全覆盖容器)
+        if (size === 'cover') { //background-size: cover;
             // 变化小的先 100%
             ret = ratioS > ratioT ? traget.height / src.height : traget.width / src.width;
         } else { // contain, auto
-        // } else if (size === 'contain') { //background-size: contain; (等比缩放, 图片全部显示)
+        // } else if (size === 'contain') { //background-size: contain;
             // 变化大的先 100%
             ret = ratioS > ratioT ? traget.width / src.width : traget.height / src.height;
         }
@@ -88,12 +94,12 @@ kairyou, 2013-01-08
                 imageSize = {width: image.width, height: image.height};
                 targetSize = {width: opts.width, height: opts.height};
                 // console.log(imageSize);
-                
+
                 // test
                 // size = 'auto'; // contain, cover, auto
                 // opts.stretch = true;
                 // opts.fill = true;
-                
+
 
                 ratio = getRatio(imageSize, targetSize, size);
                 targetW = image.width * ratio;
@@ -164,7 +170,7 @@ kairyou, 2013-01-08
                         callback(fEvt);
                     };
                     markImg.src = mark.src;
-                } else if(mark.text) {
+                } else if (mark.text) {
                     context.font = mark.font;
                     context.textBaseline = 'top'; // top, middle
                     var txtSize = context.measureText(mark.text);
@@ -197,7 +203,7 @@ kairyou, 2013-01-08
                     if (!targetW) targetW = image.width * opts.height / targetH;
                     if (!targetH) targetH = image.height * opts.width / targetW;
                 }*/
-                
+
                 if (!mark.src) callback(fEvt);
             };
             if (IMG_FILE.test(file.type)) {
@@ -220,4 +226,3 @@ kairyou, 2013-01-08
         });
     };
 })(window, jQuery);
-
