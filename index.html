@@ -6,7 +6,7 @@
 <title>HTML5 Make thumb</title>
 <meta name="description" content="HTML5 thumbnail generator">
 <style>
-html{background-color: #EEE;}
+html{background-color: #EEE;padding: 50px;}
 img{border: 1px solid #000;}
 .test{display:none;}
 .test p{width: 150px;height: 150px;border: 1px solid #f60;}
@@ -26,18 +26,25 @@ img{border: 1px solid #000;}
 </form> -->
 
 <!-- ajax -->
-<iframe name="ifr" style="display: none;"></iframe>
+<iframe name="ifr" style="display: none;"></iframe> 
 <form id="j-form" target="ifr" action="api.php" method="post" enctype="multipart/form-data">
     <input type="file" name="upfile" id="j-file" />
 </form>
 
 <script src="http://meigui.qq.com/js/jquery.js"></script>
+<!-- <script src="jpegmeta.js"></script> -->
+<!-- <script src="http://www.nihilogic.dk/labs/exif/exif.js"></script>
+<script src="http://www.nihilogic.dk/labs/binaryajax/binaryajax.js"></script> -->
+<script src="binaryajax.js"></script>
+<script src="exif.js"></script>
+<script src="megapix-image.js"></script>
 <script src="jquery.make-thumb.js"></script>
 <script>
 $(function() {
     var $form = $('#j-form');
     var $file = $('#j-file');
     // thumb
+
     $file.makeThumb({
         width: 400,
         height: 400,
@@ -48,11 +55,13 @@ $(function() {
             // console.log(file.name, sSize.width +'->'+ tSize.width, sSize.height +'->'+ tSize.height);
             var thumb = new Image();
             thumb.src = dataURL;
-            var title = file.name +', '+ sSize.width +'->'+ tSize.width +', '+ sSize.height +'->'+ tSize.height;
+            // try{}catch(err){console.log(err);}
+            // var title = file.name +', '+ sSize.width +'->'+ tSize.width +', '+ sSize.height +'->'+ tSize.height;
+            var title = file.name;
             var $div = $('<div><h6>文件来自HTML5</h6></div>').append(thumb).append('<p>' +title+ '</p>');
             $('.test').before($div);
 
-            // upload image
+            // post data
             var $up = $('<input type="hidden" name="base64">');
             $up.insertAfter($file).val(dataURL);
             $file.remove();
@@ -60,6 +69,7 @@ $(function() {
             $form.submit();
         }
     });
+    // $file.change(function(){alert(111)});
     // test
     /*$file.change(function(){
         $form.submit();
