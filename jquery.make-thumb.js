@@ -1,5 +1,5 @@
 /*
-kairyou, 2013-01-08
+kairyou, 2013-08-01
 
 size选项: contain: 等比缩放并拉伸, 图片全部显示; cover: 等比缩放并拉伸, 图片完全覆盖容器; auto 图片不拉伸, 居中显示
 fill: 图片小于缩略图尺寸时, 是否填充(false: 缩略图宽高自动缩放到适应图片, true: 缩略图尺寸不变)
@@ -8,7 +8,7 @@ stretch: 小图是否强制拉伸以适应缩略图的尺寸(size = auto/contain
 注意: 添加图片水印不能使用跨域的图片
 最好在 http开头的地址 下测试
 
-http://localhost:8080/make-thumb/index.html
+http://localhost:8080/leon/html5-make-thumb/index.html
 */
 
 (function(window, $, undefined) {
@@ -113,7 +113,7 @@ http://localhost:8080/make-thumb/index.html
                     // get EXIF data
                     exif = EXIF.readFromBinaryFile(binaryData);
                     // console.log(exif);
-                    alert(file.name +': '+ exif.Orientation);
+                    // alert(file.name +': '+ exif.Orientation);
 
                     image.src = result;
                 };
