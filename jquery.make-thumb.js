@@ -88,7 +88,9 @@ http://localhost:8080/leon/html5-make-thumb/index.html
                 }
 
                 mpImg.render(canvas, { maxWidth: opts.width, maxHeight: opts.height, orientation: orientation });
-                return callback(fEvt);
+                mpImg.onrender = function() {
+                    callback(fEvt);
+                }
             };
             if (IMG_FILE.test(file.type)) {
                 // console.log('file.name:', file.name);
@@ -113,7 +115,7 @@ http://localhost:8080/leon/html5-make-thumb/index.html
                     // get EXIF data
                     exif = EXIF.readFromBinaryFile(binaryData);
                     // console.log(exif);
-                    // alert(file.name +': '+ exif.Orientation);
+                    alert(file.name +': '+ exif.Orientation);
 
                     image.src = result;
                 };
