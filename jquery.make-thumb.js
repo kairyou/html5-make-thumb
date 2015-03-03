@@ -1,6 +1,6 @@
 /*
 kairyou, 2013-08-01
-update: 2015-03-03, Chrome4X/IE11空白; +before/always function
+update: 2015-03-03, Chrome4X/IE11空白; +before/always function; 优化上传效率;
 
 size选项: contain: 等比缩放并拉伸, 图片全部显示; cover: 等比缩放并拉伸, 图片完全覆盖容器; auto 图片不拉伸, 居中显示
 fill: 图片小于缩略图尺寸时, 是否填充(false: 缩略图宽高自动缩放到适应图片, true: 缩略图尺寸不变)
@@ -38,7 +38,27 @@ http://localhost:8080/leon/html5-make-thumb/index.html
     
     var $body = $('body');
     var IMG_FILE = /image.*/; // var TEXT_FILE = /text.*/;
+    var dataURItoBlob = function (dataURI, mime) { // convert base64 to raw binary data
+        var blob;
+        // BlobBuilder and ArrayBuffer are now deprecated
+        // github.com/blueimp/JavaScript-Canvas-to-Blob 
+        // stackoverflow.com/q/15639070/2305701
+        var support = !!($.support.filereader && window.Uint8Array); //|| window.ArrayBuffer, window.FormData
+        if (!support) return blob;
 
+        var arr = dataURI.split(',');
+        var byteString = atob(arr[1]); // decodeURI(arr[1])
+        mime = mime || arr[0].split(':')[1].split(';')[0] || 'image/jpeg';
+
+        // var ab = new ArrayBuffer(byteString.length);var ia = new Uint8Array(ab); blob = new Blob([ab], { type: mime });
+        var ia = new Uint8Array(byteString.length);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        // write the ArrayBuffer to a blob, and you're done
+        blob = new Blob([ia], { type: mime });
+        return blob;
+    };
     $.fn.makeThumb = function(options) {
         var opts = {};
         $.extend(opts, setting, options);
@@ -54,7 +74,7 @@ http://localhost:8080/leon/html5-make-thumb/index.html
         $self.change(function() {
             var self = this;
             var files = self.files;
-            var dataURL = '';
+            var dataURL = '', blob;
             // console.log(files.length);
             if ($.isFunction(before)) before();
             if (!files.length) {
@@ -78,12 +98,13 @@ http://localhost:8080/leon/html5-make-thumb/index.html
             var callback = function() {
                 // $canvas.appendTo($body).hide();
                 dataURL = canvas.toDataURL(opts.type); // 'image/jpeg'
+                blob = dataURItoBlob(dataURL);
                 // debug: show thumb
                 // var thumb = new Image();thumb.src = dataURL;$(thumb).appendTo($body);
 
                 if ($.isFunction(done)) {
                     targetSize = {width: targetW, height: targetH};
-                    done.apply(self, [dataURL, targetSize, file, imageSize, fEvt]);
+                    done.apply(self, [dataURL, blob, targetSize, file, imageSize, fEvt]);
                 }
                 if ($.isFunction(always)) always();
                 $canvas.remove(); // delete canvas
