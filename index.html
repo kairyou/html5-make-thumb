@@ -30,6 +30,7 @@ img{border: 1px solid #000;}
 <form id="j-form" target="ifr" action="api.php" method="post" enctype="multipart/form-data">
     <input type="file" name="upfile" id="j-file" />
 </form>
+<div class="j-status"></div>
 
 <script src="http://meigui.qq.com/js/jquery.js"></script>
 <!-- <script src="jpegmeta.js"></script> -->
@@ -43,13 +44,17 @@ img{border: 1px solid #000;}
 $(function() {
     var $form = $('#j-form');
     var $file = $('#j-file');
+    var $status = $('.j-status');
     // thumb
 
     $file.makeThumb({
         width: 400,
         height: 400,
         mark: {padding: 5, src: 'mark.png', width: 30, height: 30},
-        success: function(dataURL, tSize, file, sSize, fEvt) {
+        before: function() {
+        	$status.text('loading...');
+        },
+        done: function(dataURL, tSize, file, sSize, fEvt) {//success
             // 可以得到图片名, 高度等信息, 用来做一些判断, 比如图片大小是否符合要求等..
             // console.log(fEvt.target, file.name, sSize, sSize.width, sSize.height);
             // console.log(file.name, sSize.width +'->'+ tSize.width, sSize.height +'->'+ tSize.height);
@@ -67,6 +72,12 @@ $(function() {
             $file.remove();
             //console.log($form.serialize());
             $form.submit();
+        },
+        fail: function(file, fEvt) {//error
+        	console.log(file, fEvt);
+        },
+        always: function() {
+        	$status.hide();
         }
     });
     // $file.change(function(){alert(111)});

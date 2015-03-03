@@ -1,5 +1,6 @@
 /*
 kairyou, 2013-08-01
+update: 2015-03-03, Chrome4X/IE11空白; +before/always function
 
 size选项: contain: 等比缩放并拉伸, 图片全部显示; cover: 等比缩放并拉伸, 图片完全覆盖容器; auto 图片不拉伸, 居中显示
 fill: 图片小于缩略图尺寸时, 是否填充(false: 缩略图宽高自动缩放到适应图片, true: 缩略图尺寸不变)
@@ -29,9 +30,12 @@ http://localhost:8080/leon/html5-make-thumb/index.html
         // image watermark. (Note: cross-domain is not allowed)
         // mark = {padding: 5, src: 'mark.png', width: 34, height: 45};
         stretch: false, // stretch image(small versions) to fill thumbnail (size = auto | contain)
-        success: null, // call function after thumbnail has been created.
-        error: null // error callback
+        before: null, // call function before process image.
+        done: null, // success function: call function after thumbnail has been created.
+        fail: null, // error function
+        always: null // complete function(done|fail)
     };
+    
     var $body = $('body');
     var IMG_FILE = /image.*/; // var TEXT_FILE = /text.*/;
 
@@ -43,12 +47,21 @@ http://localhost:8080/leon/html5-make-thumb/index.html
         // alert(navigator.userAgent);alert(window.FileReader); // android 2.3.7 don't support
         if (!$.support.filereader) return;
         var size = opts.size;
+        var before = opts.before,
+            always = opts.always || opts.complete,
+            done = opts.done || opts.success,
+            fail = opts.fail || opts.error;
         $self.change(function() {
             var self = this;
             var files = self.files;
             var dataURL = '';
             // console.log(files.length);
-            if (!files.length) return;
+            if ($.isFunction(before)) before();
+            if (!files.length) {
+                if ($.isFunction(fail)) fail.apply(self, []);
+                if ($.isFunction(always)) always();
+                return;
+            }
 
             var file = files[0];
             var fr = new FileReader();
@@ -58,24 +71,28 @@ http://localhost:8080/leon/html5-make-thumb/index.html
             var $canvas = $('<canvas></canvas>'),
                 canvas = $canvas[0],
                 context = canvas.getContext('2d');
-            var image;
+            var image, fEvt;
             var imageSize, targetSize;
             var targetH, targetW, tragetX, tragetY;
             var ratio;
-            var callback = function(fEvt) {
+            var callback = function() {
                 // $canvas.appendTo($body).hide();
                 dataURL = canvas.toDataURL(opts.type); // 'image/jpeg'
                 // debug: show thumb
                 // var thumb = new Image();thumb.src = dataURL;$(thumb).appendTo($body);
 
-                if ($.isFunction(opts.success)) {
+                if ($.isFunction(done)) {
                     targetSize = {width: targetW, height: targetH};
-                    opts.success.apply(self, [dataURL, targetSize, file, imageSize, fEvt]);
+                    done.apply(self, [dataURL, targetSize, file, imageSize, fEvt]);
                 }
+                if ($.isFunction(always)) always();
                 $canvas.remove(); // delete canvas
             };
             var mpImg = new MegaPixImage(file);
-            var drawImage = function(fEvt, exif) {
+            mpImg.onrender = function() {
+                callback();
+            }
+            var drawImage = function(exif) {
                 var orientation = exif.Orientation;
 
                 canvas.width = opts.width;
@@ -86,26 +103,29 @@ http://localhost:8080/leon/html5-make-thumb/index.html
                     context.fillStyle = opts.background;
                     context.fillRect(0, 0, opts.width, opts.height);
                 }
-
                 mpImg.render(canvas, { maxWidth: opts.width, maxHeight: opts.height, orientation: orientation });
-                mpImg.onrender = function() {
-                    callback(fEvt);
-                }
             };
             if (IMG_FILE.test(file.type)) {
                 // console.log('file.name:', file.name);
-                fr.onerror = function(fEvt) { // error callback
-                    if ($.isFunction(opts.error)) opts.error.apply(self, [file, fEvt]);
+                fr.onerror = function(fEvent) { // error callback
+                    fEvt = fEvent;
+                    if ($.isFunction(fail)) fail.apply(self, [file, fEvt]);
+                    if ($.isFunction(always)) always();
                 };
-                fr.onload = function(fEvt) { // onload success
+                fr.onload = function(fEvent) { // onload success
+                    fEvt = fEvent;
                     // console.log(fEvt);
                     var target = fEvt.target;
                     var result = target.result;
                     // load img
                     image = new Image();
                     var exif;
+                    image.onerror = function(){
+                        if ($.isFunction(fail)) fail.apply(self, [file]);
+                        if ($.isFunction(always)) always();
+                    };
                     image.onload = function() { // imgW / height
-                        drawImage.apply(null, [fEvt, exif]);
+                        drawImage.apply(null, [exif]);
                     };
                     // Converting the data-url to a binary string
                     var base64 = result.replace(/^.*?,/,'');
@@ -115,7 +135,7 @@ http://localhost:8080/leon/html5-make-thumb/index.html
                     // get EXIF data
                     exif = EXIF.readFromBinaryFile(binaryData);
                     // console.log(exif);
-                    alert(file.name +': '+ exif.Orientation);
+                    // console.log(file.name +': '+ exif.Orientation);
 
                     image.src = result;
                 };
