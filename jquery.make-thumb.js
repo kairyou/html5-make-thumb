@@ -98,7 +98,7 @@ http://localhost:8080/leon/html5-make-thumb/index.html
             var callback = function() {
                 // $canvas.appendTo($body).hide();
                 dataURL = canvas.toDataURL(opts.type); // 'image/jpeg'
-                blob = dataURItoBlob(dataURL);
+                //blob = dataURItoBlob(dataURL);
                 // debug: show thumb
                 // var thumb = new Image();thumb.src = dataURL;$(thumb).appendTo($body);
 
