@@ -33,7 +33,7 @@ $file.makeThumb({
 });
 ```
 
-[docs](http://www.fantxi.com/blog/archives/create-thumbnail-images-html5/)
+[中文](https://xhl.me/archives/create-thumbnail-images-html5/)
 
 reference
 ---------
