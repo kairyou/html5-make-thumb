@@ -2,6 +2,8 @@ html5-make-thumb
 ================
 
 Create thumbnail with HTML5.
+Thumbnail Image
+A thumbnail is a small image that represents a larger image (when clicked on), and is often recognized with a border around it
 
 
 Useage
